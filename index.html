@@ -1,0 +1,252 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Rooftops & Alleys Move Picker with Proof</title>
+  <style>
+    body {
+      font-family: sans-serif;
+      background: #111;
+      color: #eee;
+      padding: 20px;
+      max-width: 600px;
+      margin: auto;
+      text-align: center;
+    }
+    input, button, select {
+      font-size: 1.1em;
+      padding: 8px;
+      margin: 8px 5px;
+      border-radius: 6px;
+      border: none;
+      width: 80%;
+      max-width: 350px;
+    }
+    button {
+      background-color: #333;
+      color: #fff;
+      cursor: pointer;
+      width: auto;
+      padding: 10px 20px;
+      border-radius: 8px;
+      margin-top: 10px;
+    }
+    button:hover {
+      background-color: #555;
+    }
+    .move {
+      background: #222;
+      margin: 8px auto;
+      padding: 10px;
+      border-radius: 8px;
+      font-size: 1.1em;
+      max-width: 90%;
+      text-align: left;
+    }
+    #profileMenu {
+      background: #222;
+      padding: 15px;
+      border-radius: 10px;
+      margin-bottom: 15px;
+      text-align: center;
+    }
+    #history {
+      margin-top: 20px;
+      text-align: left;
+      background: #222;
+      padding: 15px;
+      border-radius: 10px;
+      max-height: 250px;
+      overflow-y: auto;
+    }
+    .history-entry {
+      background: #333;
+      margin-bottom: 12px;
+      padding: 10px;
+      border-radius: 8px;
+    }
+    .history-entry a {
+      color: #1e90ff;
+      text-decoration: none;
+      font-weight: bold;
+    }
+    label {
+      display: block;
+      margin-top: 10px;
+      font-weight: bold;
+    }
+  </style>
+</head>
+<body>
+  <h1>Rooftops & Alleys Pro</h1>
+
+  <div id="profileMenu">
+    <label for="profileSelect">Select Profile:</label>
+    <select id="profileSelect" onchange="loadProfile()"></select>
+    <input type="text" id="newProfileName" placeholder="New profile name" />
+    <button onclick="createProfile()">Create Profile</button>
+  </div>
+
+  <div class="score">
+    Score: <span id="score">0</span>
+  </div>
+
+  <p>How many moves?</p>
+  <input type="number" id="moveCount" min="1" max="30" value="5"/>
+
+  <button onclick="generateMoves()">Generate Moves</button>
+
+  <div id="result"></div>
+
+  <label for="videoProof">Paste video proof link (YouTube, Drive, etc.)</label>
+  <input type="url" id="videoProof" placeholder="https://..." />
+
+  <button onclick="completeSet()">✅ Complete Set</button>
+
+  <h2>🕒 Completed Sets History</h2>
+  <div id="history">
+    <p>No completed sets yet.</p>
+  </div>
+
+<script>
+  const allMoves = [
+    "Sprint", "Climbing", "Mantle", "Wall Run", "Wall Slide", "Speed Vault", "Cat Pass",
+    "Reverse Vault 360", "Dash Vault", "Slide", "Roll", "Speed Boost", "Precision Jump",
+    "Chain Precise Jump", "Swinging", "Side Flip", "Cork Backtwist", "Backflip Jesus",
+    "Loose Gainer", "Normal Gainer", "Spin 360", "Vortex Flip", "Dive Roll", "Front Flip",
+    "Cartwheel", "Back Handspring", "Death Dive", "360 Dive Roll", "Airball Backflip",
+    "Airwalk Backflip", "Cork", "Illusion Twist", "360 Gainer", "360 Frontflip", "Standing Backflip"
+  ];
+
+  let profiles = JSON.parse(localStorage.getItem("profiles") || "{}");
+  let currentProfile = null;
+  let currentMoves = [];
+
+  function saveProfiles() {
+    localStorage.setItem("profiles", JSON.stringify(profiles));
+  }
+
+  function updateProfileSelect() {
+    const select = document.getElementById("profileSelect");
+    select.innerHTML = "";
+    for (let name in profiles) {
+      const option = document.createElement("option");
+      option.value = name;
+      option.textContent = name;
+      select.appendChild(option);
+    }
+    if (currentProfile) select.value = currentProfile;
+  }
+
+  function createProfile() {
+    const name = document.getElementById("newProfileName").value.trim();
+    if (!name) return alert("Enter a profile name.");
+    if (!profiles[name]) {
+      profiles[name] = { score: 0, history: [] };
+      saveProfiles();
+      currentProfile = name;
+      updateProfileSelect();
+      document.getElementById("profileSelect").value = currentProfile; // Auto select
+      loadProfile();
+      document.getElementById("newProfileName").value = "";
+    } else {
+      alert("Profile already exists!");
+    }
+  }
+
+  function loadProfile() {
+    const selected = document.getElementById("profileSelect").value;
+    currentProfile = selected;
+    document.getElementById("score").textContent = profiles[currentProfile].score;
+    renderHistory();
+  }
+
+  function generateMoves() {
+    const count = parseInt(document.getElementById("moveCount").value);
+    const resultDiv = document.getElementById("result");
+    resultDiv.innerHTML = "";
+    if (isNaN(count) || count < 1 || !currentProfile) {
+      resultDiv.innerHTML = "<p>Please select a valid profile and number.</p>";
+      return;
+    }
+    currentMoves = [...allMoves].sort(() => 0.5 - Math.random()).slice(0, count);
+    currentMoves.forEach(move => {
+      const div = document.createElement("div");
+      div.className = "move";
+      div.textContent = move;
+      resultDiv.appendChild(div);
+    });
+  }
+
+  function completeSet() {
+    if (!currentProfile) return alert("Please select a profile.");
+    if (currentMoves.length === 0) return alert("Generate a move set first.");
+    const proofInput = document.getElementById("videoProof");
+    const proofLink = proofInput.value.trim();
+    if (!proofLink) return alert("Please paste a video proof link before completing the set.");
+
+    // Save to profile history
+    const profile = profiles[currentProfile];
+    profile.score += 1;
+
+    // Record history entry with moves, proof, and date
+    const now = new Date();
+    const dateStr = now.toLocaleDateString();
+    profile.history.push({
+      date: dateStr,
+      moves: [...currentMoves],
+      proof: proofLink
+    });
+
+    saveProfiles();
+    document.getElementById("score").textContent = profile.score;
+    proofInput.value = "";
+    document.getElementById("result").innerHTML = "";
+    currentMoves = [];
+
+    alert("✅ Set completed and proof saved! +1 point.");
+    renderHistory();
+  }
+
+  function renderHistory() {
+    const historyDiv = document.getElementById("history");
+    const profile = profiles[currentProfile];
+    if (!profile.history || profile.history.length === 0) {
+      historyDiv.innerHTML = "<p>No completed sets yet.</p>";
+      return;
+    }
+    historyDiv.innerHTML = "";
+    profile.history.slice().reverse().forEach(entry => {
+      const entryDiv = document.createElement("div");
+      entryDiv.className = "history-entry";
+
+      const dateP = document.createElement("p");
+      dateP.textContent = `📅 Date: ${entry.date}`;
+      entryDiv.appendChild(dateP);
+
+      const linkA = document.createElement("a");
+      linkA.href = entry.proof;
+      linkA.target = "_blank";
+      linkA.rel = "noopener noreferrer";
+      linkA.textContent = "🎬 Watch Proof Video";
+      entryDiv.appendChild(linkA);
+
+      const movesP = document.createElement("p");
+      movesP.textContent = "🏃 Moves: " + entry.moves.join(", ");
+      entryDiv.appendChild(movesP);
+
+      historyDiv.appendChild(entryDiv);
+    });
+  }
+
+  // Initialize on page load
+  updateProfileSelect();
+  if (Object.keys(profiles).length > 0) {
+    currentProfile = Object.keys(profiles)[0];
+    document.getElementById("profileSelect").value = currentProfile;
+    loadProfile();
+  }
+</script>
+</body>
+</html>
