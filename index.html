@@ -183,7 +183,13 @@
     if (!currentProfile) return alert("Please select a profile.");
     if (currentMoves.length === 0) return alert("Generate a move set first.");
     const proofInput = document.getElementById("videoProof");
-    const proofLink = proofInput.value.trim();
+    let proofLink = proofInput.value.trim();
+
+    // Automatically add https:// if missing
+    if (!proofLink.startsWith("http://") && !proofLink.startsWith("https://")) {
+      proofLink = "https://" + proofLink;
+    }
+
     if (!proofLink) return alert("Please paste a video proof link before completing the set.");
 
     const profile = profiles[currentProfile];
