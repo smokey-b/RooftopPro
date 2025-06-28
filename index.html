@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Rooftops & Alleys Move Picker with Proof</title>
+  <title>RooftopPro by smokey-b</title>
   <style>
     body {
       font-family: sans-serif;
@@ -68,8 +68,8 @@
     }
     .history-entry a {
       color: #1e90ff;
-      text-decoration: none;
-      font-weight: bold;
+      text-decoration: underline;
+      word-break: break-all;
     }
     label {
       display: block;
@@ -79,7 +79,7 @@
   </style>
 </head>
 <body>
-  <h1>Rooftops & Alleys Pro</h1>
+  <h1>🏃 RooftopPro by smokey-b</h1>
 
   <div id="profileMenu">
     <label for="profileSelect">Select Profile:</label>
@@ -147,7 +147,7 @@
       saveProfiles();
       currentProfile = name;
       updateProfileSelect();
-      document.getElementById("profileSelect").value = currentProfile; // Auto select
+      document.getElementById("profileSelect").value = currentProfile;
       loadProfile();
       document.getElementById("newProfileName").value = "";
     } else {
@@ -186,11 +186,9 @@
     const proofLink = proofInput.value.trim();
     if (!proofLink) return alert("Please paste a video proof link before completing the set.");
 
-    // Save to profile history
     const profile = profiles[currentProfile];
     profile.score += 1;
 
-    // Record history entry with moves, proof, and date
     const now = new Date();
     const dateStr = now.toLocaleDateString();
     profile.history.push({
@@ -229,7 +227,7 @@
       linkA.href = entry.proof;
       linkA.target = "_blank";
       linkA.rel = "noopener noreferrer";
-      linkA.textContent = "🎬 Watch Proof Video";
+      linkA.textContent = entry.proof;
       entryDiv.appendChild(linkA);
 
       const movesP = document.createElement("p");
@@ -240,7 +238,6 @@
     });
   }
 
-  // Initialize on page load
   updateProfileSelect();
   if (Object.keys(profiles).length > 0) {
     currentProfile = Object.keys(profiles)[0];
